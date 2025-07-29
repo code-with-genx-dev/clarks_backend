@@ -54,8 +54,8 @@ export class ProductsService {
        productData.leather_image  = leatherImage?.data
        productData.shoe_image  = shoeImage?.data
        productData.uploaded_by  = current_user_id
-       productData.uploaded_date  = new Date()
-       productData.status  = statusType.Pending
+      //  productData.uploaded_date  = new Date()
+      //  productData.status  = statusType.Pending
 
       let updateProductData = await this.ProductModel.upsert({
               id:productDetails?.id,
