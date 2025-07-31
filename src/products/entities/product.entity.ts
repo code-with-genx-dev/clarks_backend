@@ -41,6 +41,12 @@ export class ProductRepository extends Model<InferAttributes<ProductRepository>,
    shoe_image:string
 
    @Column
+   leather_file_name:string
+       
+   @Column
+   shoe_file_name:string
+
+   @Column
    uploaded_date:Date
 
    // @BelongsTo(()=>UserRepository,{as:"user",foreignKey: 'uploaded_by'})
@@ -51,6 +57,12 @@ export class ProductRepository extends Model<InferAttributes<ProductRepository>,
 
    @Column(DataType.ENUM(...Object.values(statusType)))
    status:string
+   @Column
+   approved_user_id:number
+   @Column
+   approved_date:Date
+   @Column
+   approved_comments:string
 
     
 }
