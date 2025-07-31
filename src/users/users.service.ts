@@ -6,7 +6,8 @@ import { errorResponse, responseMessageGenerator } from 'src/common/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { UserRepository } from './entities/user.entity';
 import * as bcrypt  from "bcrypt"
-import { JwtService } from '@nestjs/jwt';
+import { JwtService} from '@nestjs/jwt'
+
  
 
 @Injectable()
@@ -66,25 +67,30 @@ export class UsersService {
 
    async signIn(logInData:logInDto):Promise<any>{
     try{
+      const bcrypt = require('bcrypt');
 
       let {email,password} =logInData
 
-       let userData = await this.UserModel.findOne({where:{user_email:email}})
+       let userData:any = await this.UserModel.findOne({where:{user_email:email},
+         raw: true
+      })
        if(userData == null){
           return responseMessageGenerator('failure',"Warning! The provided Email is incorrect. Please check and try again.",[])
        }
-
-       let isPasswordMatch = await bcrypt.comapre(password,userData.password)
+        
+       let isPasswordMatch = await bcrypt.compare(password,userData.password)
        if(!isPasswordMatch){
          return responseMessageGenerator('failure',"Warning! The provided password is incorrect. Please check and try again.",[])
        }
 
         let payload ={id:userData.id,user_name:userData.user_name,user_email:userData.user_email,is_admin:userData.is_admin}
         let token = await this.generateAccessToken(payload)
-          payload = {user:payload,...token}
+         payload = {user:payload,...token}
          return responseMessageGenerator('success',"Login successful",payload)
 
     }catch(error){
+      console.log(error);
+      
       return errorResponse(error.message)
     }
 

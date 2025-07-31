@@ -34,6 +34,7 @@ export class UsersController {
 
  @Post("sign_up")
  async signUp(@Body() signUpData:CreateUserDto):Promise<any>{
+ 
      return await this.usersService.signUp(signUpData)
  }
  @Post("login")

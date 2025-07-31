@@ -14,7 +14,7 @@ export class UserRepository extends Model<InferAttributes<UserRepository>,InferC
     @Column({type:DataType.STRING(15),allowNull:true})
     mobile_number:string
 
-    @Column({type:DataType.STRING,allowNull:false})
+    @Column({type:DataType.STRING})
     password:string
 
     @Column
