@@ -22,3 +22,12 @@ export class CreateProductDto {
         
     
 }
+
+export class approveRejectProductDto {
+   
+      current_user_id: number
+       record_id: number
+       status: string
+       approved_comments: string
+    
+}
