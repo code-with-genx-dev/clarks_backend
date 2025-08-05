@@ -69,8 +69,6 @@ export class ProductsService {
         ],raw:true
       })
      
-      return await this.getSignatureAsBase64(productDetails[0].leather_image,productDetails[0].file_type)
-      
       let responseData = await Promise.all(productDetails.map(async singleData => {
         return {
           uploaded_date: moment(singleData.uploaded_date).format('DD-MMM-YYYY,ddd'),
