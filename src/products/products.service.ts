@@ -31,7 +31,7 @@ export class ProductsService {
       let leatherImage = await this.uploadUserDetails(productDetails?.id, productData.leather_image, productData.leather_name, "leather",productData.leather_name)
       let fileType = await this.getFileType(productData.leather_image)
       // let shoeImage = await this.uploadUserDetails(productDetails?.id, productData.shoe_image, productData.leather_name, "shoe")
-
+    
       productData.leather_image = leatherImage?.data
       productData.leather_image = leatherImage?.data
       // productData.shoe_image = shoeImage?.data
@@ -48,6 +48,35 @@ export class ProductsService {
     } catch (error) {
       console.log(error);
       
+      return errorResponse(error.message)
+    }
+  }
+
+  async getProductDetails(sub_category:string): Promise<any> {
+    try {
+
+      let productDetails: any = await this.ProductModel.findAll({
+        // where: { status: "Approved",sub_category:sub_category},
+        where: { sub_category:sub_category},
+        include: [
+          { association: "users", attributes: ['user_name'] }
+        ],raw:true
+      })
+      
+      let responseData = await Promise.all(productDetails.map(async singleData => {
+        return {
+          uploaded_date: moment(singleData.uploaded_date).format('DD-MMM-YYYY,ddd'),
+          uploaded_by: singleData['users.user_name'],
+          upload_category: singleData.category,
+          upload_sub_category: singleData.sub_category,
+          upload_file_name: singleData.leather_file_name,
+          upload_status: singleData.status,
+          leather_image: (await this.getSignatureAsBase64(singleData.leather_image,singleData.file_type))?.data,
+          show_image: (await this.getSignatureAsBase64(singleData.shoe_image,singleData.file_type)).data
+        }}))
+
+      return responseMessageGenerator('success', "data fetched successfully", responseData)
+    } catch (error) {
       return errorResponse(error.message)
     }
   }
@@ -70,37 +99,6 @@ export class ProductsService {
       await this.ProductModel.update(payload, { where: { id: productDetails?.id } })
 
       return responseMessageGenerator('success', `product ${status} successfully`, [])
-    } catch (error) {
-      return errorResponse(error.message)
-    }
-  }
-
-  async getProductDetails(): Promise<any> {
-    try {
-
-      let productDetails: any = await this.ProductModel.findAll({
-        where: { status: "Approved" },
-        include: [
-          { association: "users", attributes: ['user_name'] }
-        ],raw:true
-      })
-       
-      
-      let responseData = await Promise.all(productDetails.map(async singleData => {
-        return {
-          uploaded_date: moment(singleData.uploaded_date).format('DD-MMM-YYYY,ddd'),
-          uploaded_by: singleData['users.user_name'],
-          upload_category: singleData.leather_category,
-          upload_sub_category: singleData.sub_category,
-          upload_file_name: singleData.leather_category,
-          upload_status: singleData.status,
-          leather_image: (await this.getSignatureAsBase64(singleData.leather_image,singleData.file_type))?.data,
-          show_image: (await this.getSignatureAsBase64(singleData.shoe_image,singleData.file_type)).data
-        }
-      }
-      ))
-
-      return responseMessageGenerator('success', "data fetched successfully", responseData)
     } catch (error) {
       return errorResponse(error.message)
     }

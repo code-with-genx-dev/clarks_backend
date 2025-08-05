@@ -22,6 +22,7 @@ export class CreateProductDto {
         approved_date:Date
         approved_comments:string
         file_type:string
+        category:string
         
     
 }

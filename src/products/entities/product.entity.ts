@@ -1,15 +1,17 @@
 import { Column, DataType, Table,Model, BelongsTo, ForeignKey, } from "sequelize-typescript";
 import {InferCreationAttributes,InferAttributes} from "sequelize";
-import { CatogryType, statusType, subCatogryType } from "../enum/product.enum";
+import { CatogryType, leatherCatogryType, statusType, subCatogryType } from "../enum/product.enum";
 import { UserRepository } from "src/users/entities/user.entity";
 
 
 @Table({tableName:"products"})
 export class ProductRepository extends Model<InferAttributes<ProductRepository>,InferCreationAttributes<ProductRepository>>{
    
-   @Column(DataType.ENUM(...Object.values(CatogryType)))
+   @Column(DataType.ENUM(...Object.values(leatherCatogryType)))
    leather_category:string
 
+   @Column(DataType.ENUM(...Object.values(CatogryType)))
+   category:string
    @Column(DataType.ENUM(...Object.values(subCatogryType)))
    sub_category:string
 

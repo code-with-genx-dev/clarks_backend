@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete,Headers } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete,Headers, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { approveRejectProductDto, CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -20,9 +20,9 @@ export class ProductsController {
      return await this.productsService.approveRejectProductData(approveRejectData)
   }
   @Get("get-product-details")
-  async getProductDetails(@Headers("Authorization") headers:any):Promise<any>{
+  async getProductDetails(@Headers("Authorization") headers:any,@Query("sub_category")sub_category:string):Promise<any>{
      let token = await decodeAccessToken(headers)
-    return  await this.productsService.getProductDetails()
+    return  await this.productsService.getProductDetails(sub_category)
   }
   @Post("get-product-approval-data")
   async getProductApprovalData(@Headers("Authorization") headers:any,@Body() data:{user_id: number, selected_date: Date, status: string, filter: { status: string[] }}):Promise<any>{
