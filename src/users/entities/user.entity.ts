@@ -1,10 +1,11 @@
-import { Table ,Column, DataType,Model} from "sequelize-typescript";
+import { Table ,Column, DataType,Model, PrimaryKey} from "sequelize-typescript";
 import {InferCreationAttributes,InferAttributes} from "sequelize"
 
 
 @Table({tableName:"users"})
 export class UserRepository extends Model<InferAttributes<UserRepository>,InferCreationAttributes<UserRepository>>{
-   
+    @Column({primaryKey:true,autoIncrement:true})
+    declare id:number
     @Column
     user_name:string
 

@@ -25,9 +25,9 @@ export class ProductsController {
     return  await this.productsService.getProductDetails()
   }
   @Post("get-product-approval-data")
-  async getProductApprovalData(@Headers("Authorization") headers:any,@Body() data:{user_id: number, selected: Date, status: string, filter: { status: string[] }}):Promise<any>{
+  async getProductApprovalData(@Headers("Authorization") headers:any,@Body() data:{user_id: number, selected_date: Date, status: string, filter: { status: string[] }}):Promise<any>{
      let token = await decodeAccessToken(headers)
-    return await this.productsService.getProductApprovalData(data.user_id, data.selected, data.status, data.filter)
+    return await this.productsService.getProductApprovalData(+token.user_id, data.selected_date, data.status, data.filter)
   }
   @Post("get-product-approval-card-data")
   async getProductApprovalcardData(@Headers("Authorization") headers:any,@Body() data:{selected: Date}):Promise<any>{

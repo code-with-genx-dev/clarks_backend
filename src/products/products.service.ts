@@ -21,21 +21,22 @@ export class ProductsService {
     @InjectModel(ProductRepository) private ProductModel: typeof ProductRepository,
   ) { }
   
-  private readonly uploadPath = 'public/uploads';
+  private readonly uploadPath = 'src/uploads';
 
 
   async saveProduct(current_user_id: number, productData: CreateProductDto): Promise<any> {
     try {
       let productDetails: any = await this.ProductModel.findOne({ where: { leather_name: productData.leather_name, leather_category: productData.leather_category } })
 
-      let leatherImage = await this.uploadUserDetails(productDetails?.id, productData.leather_image, productData.leather_name, "leather")
-
+      let leatherImage = await this.uploadUserDetails(productDetails?.id, productData.leather_image, productData.leather_name, "leather",productData.leather_name)
+      let fileType = await this.getFileType(productData.leather_image)
       // let shoeImage = await this.uploadUserDetails(productDetails?.id, productData.shoe_image, productData.leather_name, "shoe")
-      
+
       productData.leather_image = leatherImage?.data
       productData.leather_image = leatherImage?.data
       // productData.shoe_image = shoeImage?.data
       productData.uploaded_by = current_user_id
+      productData.file_type = fileType
       productData.uploaded_date = new Date()
       productData.status = statusType.Pending
 
@@ -81,19 +82,20 @@ export class ProductsService {
         where: { status: "Approved" },
         include: [
           { association: "users", attributes: ['user_name'] }
-        ]
+        ],raw:true
       })
-
-      let responseData = Promise.all(productDetails.map(async singleData => {
+       
+      
+      let responseData = await Promise.all(productDetails.map(async singleData => {
         return {
           uploaded_date: moment(singleData.uploaded_date).format('DD-MMM-YYYY,ddd'),
-          uploaded_by: singleData.users.user_name,
+          uploaded_by: singleData['users.user_name'],
           upload_category: singleData.leather_category,
-          upload_sub_category: singleData.leather_category,
+          upload_sub_category: singleData.sub_category,
           upload_file_name: singleData.leather_category,
           upload_status: singleData.status,
-          leather_image: await this.getSignatureAsBase64(singleData.leather_image),
-          show_image: await this.getSignatureAsBase64(singleData.shoe_image)
+          leather_image: (await this.getSignatureAsBase64(singleData.leather_image,singleData.file_type))?.data,
+          show_image: (await this.getSignatureAsBase64(singleData.shoe_image,singleData.file_type)).data
         }
       }
       ))
@@ -106,26 +108,26 @@ export class ProductsService {
   async getProductApprovalData(user_id: number, selected: Date, status: string, filter: { status: string[] }): Promise<any> {
     try {
 
-      let whereCondition = {}
-
       let startOfMonth = moment(selected).startOf('month').format('YYYY-MM-DD HH:mm:ss')
       let endOfMonth = moment(selected).endOf('month').format('YYYY-MM-DD HH:mm:ss')
       let productDetails: any = await this.ProductModel.findAll({
         where: {
           createdAt: { [Op.between]: [startOfMonth, endOfMonth] },
-          ...(filter.status.length > 0 && { status: filter.status })
+          ...(filter?.status?.length == 0 && { status:"Pending" }),
+          ...(filter?.status?.length > 0 && { status: filter?.status })
         },
         include: [
-          { association: "user", attributes: ['user_name'] }
-        ]
+          { association: "users", attributes: ['user_name'] }
+        ],raw:true
       })
 
       let responseData = productDetails.map(singleData => ({
+        id:singleData?.id,
         uploaded_date: moment(singleData.uploaded_date).format('DD-MMM-YYYY,ddd'),
-        uploaded_by: singleData.users.user_name,
+        uploaded_by: singleData['users.user_name'],
         upload_category: singleData.leather_category,
-        upload_sub_category: singleData.leather_category,
-        upload_file_name: singleData.leather_category,
+        upload_sub_category: singleData.sub_category,
+        upload_file_name: singleData.leather_file_name,
         upload_status: singleData.status
       }))
 
@@ -136,12 +138,6 @@ export class ProductsService {
   }
   async getProductApprovalcardData( selected: Date): Promise<any> {
     try {
-
-      let whereCondition = {}
-
-    
-
-    
 
       let startOfMonth = moment(selected).startOf('month').format('YYYY-MM-DD HH:mm:ss')
       let endOfMonth = moment(selected).endOf('month').format('YYYY-MM-DD HH:mm:ss')
@@ -178,7 +174,7 @@ export class ProductsService {
       return errorResponse(error.message)
     }
   }
-  async uploadUserDetails(product_id: string, base64Image: string, product_name: string, type: string): Promise<any> {
+  async uploadUserDetails(product_id: string, base64Image: string, product_name: string, type: string,leather_name:string): Promise<any> {
     try {
       // Extract base64 data
       const matches = base64Image.match(/^data:image\/(\w+);base64,(.+)$/);
@@ -194,8 +190,9 @@ export class ProductsService {
         }
       }
 
-      let saveSignature = await this.saveSignature(product_id, base64Image, type)
-      if (saveSignature.status == 'failure') {
+      let saveSignature = await this.saveSignature(product_id, base64Image, type,leather_name)
+     
+      if (saveSignature?.status == 'failure') {
         return saveSignature
       }
 
@@ -205,7 +202,7 @@ export class ProductsService {
       return errorResponse(error.message)
     }
   }
-  async saveSignature(productId: string, base64Image: string, type: string): Promise<any> {
+  async saveSignature(productId: string, base64Image: string, type: string,leather_name:string): Promise<any> {
     try {
       // Extract base64 data
       const matches = base64Image.match(/^data:image\/(\w+);base64,(.+)$/);
@@ -214,9 +211,13 @@ export class ProductsService {
       const extension = matches[1];
       const buffer = Buffer.from(matches[2], 'base64');
 
-      let productData: any = await this.userModel.findOne({ where: { id: productId } })
+      let productData: any = await this.ProductModel.findOne({ where: { id: productId },raw:true })
+      
+      let name:any = ""
+      name = productData == null ? leather_name :productData.leather_name
       // Define file path
-      const fileName = `${(productData.leather_name).toLowerCase()}_${productId}_image.${extension}`;
+     
+      const fileName = `${(name).toLowerCase()}_${productId}_image.${extension}`;
       let path = type == "shoe" ? this.uploadPath + "/shoe" : this.uploadPath + "/leather"
       const filePath = join(path, fileName);
 
@@ -229,9 +230,10 @@ export class ProductsService {
       return responseMessageGenerator('failure', error.message, null)
     }
   }
-  async getSignatureAsBase64(filename: string): Promise<any> {
+  async getSignatureAsBase64(filename: string,file_type:string): Promise<any> {
     try {
       // Define the file path
+    
       const filePath = filename
 
       // Check if file exists
@@ -244,11 +246,21 @@ export class ProductsService {
       const base64Image = fileBuffer.toString('base64');
 
       // Return the Base64 response
-      return responseMessageGenerator('success', 'data fetch successfully', `data:image/png;base64,${base64Image}`);
+      return responseMessageGenerator('success', 'data fetch successfully', `data:image/${file_type};base64,${base64Image}`);
     } catch (error) {
       console.error('Error fetching image:', error);
       responseMessageGenerator('failure', "Error fetching image", null)
 
     }
   }
+  async getFileType(base64Data: string): Promise<any> {
+  const match = base64Data.match(/^data:(image\/\w+);base64,/);
+  if (match) {
+    const mimeType = match[1]; // e.g., 'image/png'
+    const fileExtension = mimeType.split('/')[1]; // e.g., 'png'
+    return fileExtension;
+  }
+  return null;
+}
+
 }

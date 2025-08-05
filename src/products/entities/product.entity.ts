@@ -67,5 +67,8 @@ export class ProductRepository extends Model<InferAttributes<ProductRepository>,
    @Column
    approved_comments:string
 
+   @Column
+   file_type:string
+
     
 }

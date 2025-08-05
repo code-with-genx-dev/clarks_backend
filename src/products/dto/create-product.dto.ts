@@ -21,13 +21,14 @@ export class CreateProductDto {
         approved_user_id:number
         approved_date:Date
         approved_comments:string
+        file_type:string
         
     
 }
 
 export class approveRejectProductDto {
    
-      current_user_id: number
+       current_user_id: number
        record_id: number
        status: string
        approved_comments: string

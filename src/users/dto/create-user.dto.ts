@@ -2,6 +2,7 @@ import { IsBoolean, IsString } from "class-validator";
 
 
 export class CreateUserDto {
+        id:number
         user_name:string
         user_email:string
         mobile_number:string
