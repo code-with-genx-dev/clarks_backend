@@ -83,7 +83,7 @@ export class UsersService {
          return responseMessageGenerator('failure',"Warning! The provided password is incorrect. Please check and try again.",[])
        }
 
-        let payload ={id:userData.id,user_name:userData.user_name,user_email:userData.user_email,is_admin:userData.is_admin}
+        let payload ={id:userData.id,user_name:userData.user_name,user_email:userData.user_email,is_admin: userData?.is_admin == 1 ? true : false}
         let token = await this.generateAccessToken(payload)
          payload = {user:payload,...token}
          return responseMessageGenerator('success',"Login successful",payload)

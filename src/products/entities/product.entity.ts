@@ -1,6 +1,6 @@
 import { Column, DataType, Table,Model, BelongsTo, ForeignKey, } from "sequelize-typescript";
 import {InferCreationAttributes,InferAttributes} from "sequelize";
-import { CatogryType, statusType } from "../enum/product.enum";
+import { CatogryType, statusType, subCatogryType } from "../enum/product.enum";
 import { UserRepository } from "src/users/entities/user.entity";
 
 
@@ -9,6 +9,9 @@ export class ProductRepository extends Model<InferAttributes<ProductRepository>,
    
    @Column(DataType.ENUM(...Object.values(CatogryType)))
    leather_category:string
+
+   @Column(DataType.ENUM(...Object.values(subCatogryType)))
+   sub_category:string
 
    @Column
    leather_name:string
@@ -22,7 +25,7 @@ export class ProductRepository extends Model<InferAttributes<ProductRepository>,
    @Column
    season_introduced:string
 
-   @Column(DataType.DECIMAL(2,2))
+   @Column(DataType.DECIMAL(10,2))
    season_price:number
 
    @Column
@@ -49,8 +52,8 @@ export class ProductRepository extends Model<InferAttributes<ProductRepository>,
    @Column
    uploaded_date:Date
 
-   // @BelongsTo(()=>UserRepository,{as:"user",foreignKey: 'uploaded_by'})
-   // users:UserRepository
+   @BelongsTo(()=>UserRepository,{as:"users",foreignKey: 'uploaded_by'})
+   users:UserRepository
    @ForeignKey(()=>UserRepository)
    @Column
    uploaded_by:number
@@ -64,5 +67,5 @@ export class ProductRepository extends Model<InferAttributes<ProductRepository>,
    @Column
    approved_comments:string
 
-    
+    
 }

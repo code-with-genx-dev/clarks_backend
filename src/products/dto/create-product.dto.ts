@@ -1,11 +1,13 @@
 export class CreateProductDto {
    
        leather_category:string
+       sub_category:string
        leather_name:string
        tannery:string
        tannery_location:string
        season_introduced:string
        season_price:number
+       users:any
        moq:string
        shoe_factories:string
        style_used:string
@@ -28,6 +30,6 @@ export class approveRejectProductDto {
       current_user_id: number
        record_id: number
        status: string
-       approved_comments: string
-    
+       approved_comments: string
+    
 }

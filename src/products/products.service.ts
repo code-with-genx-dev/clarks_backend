@@ -20,39 +20,21 @@ export class ProductsService {
     @InjectModel(UserRepository) private userModel: typeof UserRepository,
     @InjectModel(ProductRepository) private ProductModel: typeof ProductRepository,
   ) { }
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
-  }
-
-  findAll() {
-    return `This action returns all products`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
-  }
-
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} product`;
-  }
-
+  
   private readonly uploadPath = 'public/uploads';
 
 
   async saveProduct(current_user_id: number, productData: CreateProductDto): Promise<any> {
     try {
-
       let productDetails: any = await this.ProductModel.findOne({ where: { leather_name: productData.leather_name, leather_category: productData.leather_category } })
 
       let leatherImage = await this.uploadUserDetails(productDetails?.id, productData.leather_image, productData.leather_name, "leather")
-      let shoeImage = await this.uploadUserDetails(productDetails?.id, productData.shoe_image, productData.leather_name, "shoe")
 
+      // let shoeImage = await this.uploadUserDetails(productDetails?.id, productData.shoe_image, productData.leather_name, "shoe")
+      
       productData.leather_image = leatherImage?.data
-      productData.shoe_image = shoeImage?.data
+      productData.leather_image = leatherImage?.data
+      // productData.shoe_image = shoeImage?.data
       productData.uploaded_by = current_user_id
       productData.uploaded_date = new Date()
       productData.status = statusType.Pending
@@ -63,6 +45,8 @@ export class ProductsService {
       })
       return responseMessageGenerator('success', "data  saved successfully", [])
     } catch (error) {
+      console.log(error);
+      
       return errorResponse(error.message)
     }
   }
@@ -93,14 +77,10 @@ export class ProductsService {
   async getProductDetails(): Promise<any> {
     try {
 
-      let whereCondition = {}
-
-      //  let startOfMonth  = moment(selected).startOf('month').format('YYYY-MM-DD HH:mm:ss')
-      //  let endOfMonth = moment(selected).endOf('month').format('YYYY-MM-DD HH:mm:ss')
       let productDetails: any = await this.ProductModel.findAll({
         where: { status: "Approved" },
         include: [
-          { association: "user", attributes: ['user_name'] }
+          { association: "users", attributes: ['user_name'] }
         ]
       })
 
@@ -118,7 +98,7 @@ export class ProductsService {
       }
       ))
 
-      return responseMessageGenerator('success', "data  saved successfully", responseData)
+      return responseMessageGenerator('success', "data fetched successfully", responseData)
     } catch (error) {
       return errorResponse(error.message)
     }
@@ -154,28 +134,30 @@ export class ProductsService {
       return errorResponse(error.message)
     }
   }
-  async getProductApprovalcardData(user_id: number, selected: Date, status: string, filter: { status: string[] }): Promise<any> {
+  async getProductApprovalcardData( selected: Date): Promise<any> {
     try {
 
       let whereCondition = {}
+
+    
+
+    
+
+      let startOfMonth = moment(selected).startOf('month').format('YYYY-MM-DD HH:mm:ss')
+      let endOfMonth = moment(selected).endOf('month').format('YYYY-MM-DD HH:mm:ss')
 
       let getProductData = async (startOfMonth,endOfMonth,status)=>{
          let productDetails: any = await this.ProductModel.findAndCountAll({
         where: {
           createdAt: { [Op.between]: [startOfMonth, endOfMonth] },
-           ...( status != "Uploads" && {status: filter.status})
+          ...( status != "Uploads" && {status: status})
         },
         include: [
-          { association: "user", attributes: ['user_name'] }
+          { association: "users", attributes: ['user_name'] }
         ]
       })
-
        return productDetails.count
-
-      }
-
-      let startOfMonth = moment(selected).startOf('month').format('YYYY-MM-DD HH:mm:ss')
-      let endOfMonth = moment(selected).endOf('month').format('YYYY-MM-DD HH:mm:ss')
+    }
 
       let statusArray = ["Uploads","Approved","Rejected","Pending"]
     
@@ -186,7 +168,7 @@ export class ProductsService {
          
           let statusCount = await getProductData(startOfMonth,endOfMonth,singleStatus)
            Object['tittle'] = "Total "+singleStatus;
-           Object['count'] = "Total "+statusCount;
+           Object['count'] = statusCount;
            responseJson.push(Object);
 
       }
@@ -203,9 +185,6 @@ export class ProductsService {
       if (!matches) return responseMessageGenerator('failure', "Invalid image format", null)
 
       let productData: any = await this.ProductModel.findOne({ where: { id: product_id } })
-      let imagePath = productData.shoe_image
-      type == "leather" && (imagePath = productData.leather_image)
-
       if (productData && productData.shoe_image) {
         const oldImagePath = path.join(__dirname, '..', '..', productData.shoe_image);
 
