@@ -4,6 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import * as moment from 'moment-timezone';
 import * as express from 'express';
 import { join } from 'path';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const port = 5000;
@@ -13,6 +14,8 @@ async function bootstrap() {
   app.use('/public/uploads', express.static('public/uploads'));
   app.use('/public', express.static(join(__dirname, '..', 'public')));
   app.enableCors();
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   await app.listen(port, () => console.log(`app listening on port ${port}!`));
 }
 bootstrap();
