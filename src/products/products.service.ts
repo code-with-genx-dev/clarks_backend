@@ -27,14 +27,16 @@ export class ProductsService {
   async saveProduct(current_user_id: number, productData: CreateProductDto): Promise<any> {
     try {
        let productDetails
-      if(productData.sub_category ="non_leather"){
+      if(productData.sub_category =="non_leather"){
           productDetails = await this.ProductModel.findOne({ where: { leather_file_name: productData.leather_file_name, category: productData.category,sub_category:productData.sub_category } })
       }else{
-         productDetails = await this.ProductModel.findOne({ where: { leather_name: productData.leather_name, leather_category: productData.leather_category } })
+         productDetails = await this.ProductModel.findOne({ where: { leather_name: productData.leather_name, leather_category: productData.leather_category ,sub_category:productData.sub_category } })
+         
       }
-      
+       
 
       let leatherImage = await this.uploadUserDetails(productDetails?.id, productData.leather_image, productData.leather_name, "leather",productData)
+    
       let fileType = await this.getFileType(productData.leather_image)
       // let shoeImage = await this.uploadUserDetails(productDetails?.id, productData.shoe_image, productData.leather_name, "shoe")
       
@@ -183,7 +185,11 @@ export class ProductsService {
       const matches = base64Image.match(/^data:image\/(\w+);base64,(.+)$/);
       if (!matches) return responseMessageGenerator('failure', "Invalid image format", null)
 
-      let productData: any = await this.ProductModel.findOne({ where: { id: product_id } })
+      let productData: any = null
+      if(product_id){
+         productData= await this.ProductModel.findOne({ where: { id: product_id } })
+      }
+      
       if (productData && productData.shoe_image) {
         const oldImagePath = path.join(__dirname, '..', '..', productData.shoe_image);
 
@@ -214,12 +220,13 @@ export class ProductsService {
       const extension = matches[1];
       const buffer = Buffer.from(matches[2], 'base64');
 
-      let productData: any = await this.ProductModel.findOne({ where: { id: productId },raw:true })
+      let productData: any =null
+      if(productId){
+           productData =await this.ProductModel.findOne({ where: { id: productId },raw:true })
+      }
       
-      let name:any = ""
       let  fileName :any= null
-      console.log(productDetails.hasOwnProperty("leather_name"));
-      
+     
        if(productDetails?.leather_name != null ){
        fileName = `${(productDetails?.leather_name).toLowerCase()}_${productId}_image.${extension}`;
       }else{
