@@ -36,7 +36,6 @@ export class ProductsService {
        
 
       let leatherImage = await this.uploadUserDetails(productDetails?.id, productData.leather_image, productData.leather_name, "leather",productData)
-    
       let fileType = await this.getFileType(productData.leather_image)
       // let shoeImage = await this.uploadUserDetails(productDetails?.id, productData.shoe_image, productData.leather_name, "shoe")
       
@@ -69,6 +68,8 @@ export class ProductsService {
           { association: "users", attributes: ['user_name'] }
         ],raw:true
       })
+     
+      return await this.getSignatureAsBase64(productDetails[0].leather_image,productDetails[0].file_type)
       
       let responseData = await Promise.all(productDetails.map(async singleData => {
         return {
@@ -182,7 +183,11 @@ export class ProductsService {
   async uploadUserDetails(product_id: string, base64Image: string, product_name: string, type: string,productDetails:any): Promise<any> {
     try {
       // Extract base64 data
-      const matches = base64Image.match(/^data:image\/(\w+);base64,(.+)$/);
+
+       
+       let matches =  base64Image.match(/^data:(image|application)\/(\w+);base64,(.+)$/)
+      
+  
       if (!matches) return responseMessageGenerator('failure', "Invalid image format", null)
 
       let productData: any = null
@@ -214,11 +219,14 @@ export class ProductsService {
   async saveSignature(productId: string, base64Image: string, type: string,productDetails:any): Promise<any> {
     try {
       // Extract base64 data
-      const matches = base64Image.match(/^data:image\/(\w+);base64,(.+)$/);
+    
+      let fileType = await this.getFileType(base64Image)
+      const matches = base64Image.match(/^data:(image|application)\/(\w+);base64,(.+)$/)
+
       if (!matches) throw new Error('Invalid image format');
 
-      const extension = matches[1];
-      const buffer = Buffer.from(matches[2], 'base64');
+      const extension = fileType;
+      const buffer = Buffer.from(matches[3], 'base64');
 
       let productData: any =null
       if(productId){
@@ -253,7 +261,8 @@ export class ProductsService {
       // Define the file path
     
       const filePath = filename
-
+      let dataType = file_type =="pdf" ? "application":"image"
+      
       // Check if file exists
       if (!fs.existsSync(filePath)) {
         return responseMessageGenerator('failure', "File not found", null)
@@ -264,7 +273,7 @@ export class ProductsService {
       const base64Image = fileBuffer.toString('base64');
 
       // Return the Base64 response
-      return responseMessageGenerator('success', 'data fetch successfully', `data:image/${file_type};base64,${base64Image}`);
+      return responseMessageGenerator('success', 'data fetch successfully', `data:${dataType}/${file_type};base64,${base64Image}`);
     } catch (error) {
       console.error('Error fetching image:', error);
       responseMessageGenerator('failure', "Error fetching image", null)
@@ -272,7 +281,7 @@ export class ProductsService {
     }
   }
   async getFileType(base64Data: string): Promise<any> {
-  const match = base64Data.match(/^data:(image\/\w+);base64,/);
+  const match = base64Data.match(/^data:((image|application)\/\w+);base64,/);
   if (match) {
     const mimeType = match[1]; // e.g., 'image/png'
     const fileExtension = mimeType.split('/')[1]; // e.g., 'png'
