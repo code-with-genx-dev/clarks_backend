@@ -26,13 +26,18 @@ export class ProductsService {
 
   async saveProduct(current_user_id: number, productData: CreateProductDto): Promise<any> {
     try {
-      let productDetails: any = await this.ProductModel.findOne({ where: { leather_name: productData.leather_name, leather_category: productData.leather_category } })
+       let productDetails
+      if(productData.sub_category ="non_leather"){
+          productDetails = await this.ProductModel.findOne({ where: { leather_file_name: productData.leather_file_name, category: productData.category,sub_category:productData.sub_category } })
+      }else{
+         productDetails = await this.ProductModel.findOne({ where: { leather_name: productData.leather_name, leather_category: productData.leather_category } })
+      }
+      
 
-      let leatherImage = await this.uploadUserDetails(productDetails?.id, productData.leather_image, productData.leather_name, "leather",productData.leather_name)
+      let leatherImage = await this.uploadUserDetails(productDetails?.id, productData.leather_image, productData.leather_name, "leather",productData)
       let fileType = await this.getFileType(productData.leather_image)
       // let shoeImage = await this.uploadUserDetails(productDetails?.id, productData.shoe_image, productData.leather_name, "shoe")
-    
-      productData.leather_image = leatherImage?.data
+      
       productData.leather_image = leatherImage?.data
       // productData.shoe_image = shoeImage?.data
       productData.uploaded_by = current_user_id
@@ -172,7 +177,7 @@ export class ProductsService {
       return errorResponse(error.message)
     }
   }
-  async uploadUserDetails(product_id: string, base64Image: string, product_name: string, type: string,leather_name:string): Promise<any> {
+  async uploadUserDetails(product_id: string, base64Image: string, product_name: string, type: string,productDetails:any): Promise<any> {
     try {
       // Extract base64 data
       const matches = base64Image.match(/^data:image\/(\w+);base64,(.+)$/);
@@ -188,8 +193,8 @@ export class ProductsService {
         }
       }
 
-      let saveSignature = await this.saveSignature(product_id, base64Image, type,leather_name)
-     
+      let saveSignature = await this.saveSignature(product_id, base64Image, type,productDetails)
+       
       if (saveSignature?.status == 'failure') {
         return saveSignature
       }
@@ -200,7 +205,7 @@ export class ProductsService {
       return errorResponse(error.message)
     }
   }
-  async saveSignature(productId: string, base64Image: string, type: string,leather_name:string): Promise<any> {
+  async saveSignature(productId: string, base64Image: string, type: string,productDetails:any): Promise<any> {
     try {
       // Extract base64 data
       const matches = base64Image.match(/^data:image\/(\w+);base64,(.+)$/);
@@ -212,11 +217,19 @@ export class ProductsService {
       let productData: any = await this.ProductModel.findOne({ where: { id: productId },raw:true })
       
       let name:any = ""
-      name = productData == null ? leather_name :productData.leather_name
+      let  fileName :any= null
+      console.log(productDetails.hasOwnProperty("leather_name"));
+      
+       if(productDetails?.leather_name != null ){
+       fileName = `${(productDetails?.leather_name).toLowerCase()}_${productId}_image.${extension}`;
+      }else{
+        fileName =productDetails?.leather_file_name;
+      }
       // Define file path
      
-      const fileName = `${(name).toLowerCase()}_${productId}_image.${extension}`;
+      
       let path = type == "shoe" ? this.uploadPath + "/shoe" : this.uploadPath + "/leather"
+    
       const filePath = join(path, fileName);
 
       // Save image

@@ -15,11 +15,11 @@ export enum leatherCatogryType {
         Ecatalog = "E catalog"
 }
 export enum subCatogryType {
-    Leather ="Leather",
-    NonLeather ="NonLeather",
-    Reinforcement="Reinforcement",
+    Leather ="leather",
+    NonLeather ="non_leather",
+    Reinforcement="reinforcement",
     Soles="Soles",
-    LacesTapes = "Laces & Tapes",
+    LacesTapes = "laces",
     Innovations = "Innovations",
     SeasonedColorPalette ="Seasoned Color Palette",
     SustainabilityAndRecycle ="Sustainability and Recycle",
