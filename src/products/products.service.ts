@@ -125,15 +125,16 @@ export class ProductsService {
         ],raw:true
       })
 
-      let responseData = productDetails.map(singleData => ({
+      let responseData = await Promise.all(productDetails.map( async singleData => ({
         id:singleData?.id,
         uploaded_date: moment(singleData.uploaded_date).format('DD-MMM-YYYY,ddd'),
         uploaded_by: singleData['users.user_name'],
         upload_category: singleData.leather_category,
         upload_sub_category: singleData.sub_category,
         upload_file_name: singleData.leather_file_name,
-        upload_status: singleData.status
-      }))
+        upload_status: singleData.status,
+        leather_image: (await this.getSignatureAsBase64(singleData.leather_image,singleData.file_type))?.data,
+      })))
 
       return responseMessageGenerator('success', "data  saved successfully", responseData)
     } catch (error) {
